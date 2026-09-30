@@ -144,6 +144,17 @@ async function handleApi(req, res, pathname, query) {
     return sendJson(res, 200, { user: publicUser(u) });
   }
 
+  // Auto-login as admin — no credentials required (public demo mode)
+  if (pathname === '/api/auth/autologin' && req.method === 'POST') {
+    const admin = db.users.find((u) => u.role === 'admin');
+    if (!admin) return sendJson(res, 500, { error: 'Admin user not seeded' });
+    const session = { id: uid('s'), userId: admin.id, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString() };
+    db.sessions.push(session);
+    save();
+    setSessionCookie(res, session.id);
+    return sendJson(res, 200, { user: publicUser(admin) });
+  }
+
   if (pathname === '/api/auth/logout' && req.method === 'POST') {
     const sessionId = getSessionIdFromReq(req);
     if (sessionId) {
