@@ -144,15 +144,15 @@ async function handleApi(req, res, pathname, query) {
     return sendJson(res, 200, { user: publicUser(u) });
   }
 
-  // Auto-login as manager — no credentials required (public demo mode)
+  // Auto-login as executive — no credentials required (public demo mode)
   if (pathname === '/api/auth/autologin' && req.method === 'POST') {
-    const manager = db.users.find((u) => u.role === 'manager');
-    if (!manager) return sendJson(res, 500, { error: 'Manager user not seeded' });
-    const session = { id: uid('s'), userId: manager.id, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString() };
+    const executive = db.users.find((u) => u.role === 'executive');
+    if (!executive) return sendJson(res, 500, { error: 'Executive user not seeded' });
+    const session = { id: uid('s'), userId: executive.id, createdAt: new Date().toISOString(), expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString() };
     db.sessions.push(session);
     save();
     setSessionCookie(res, session.id);
-    return sendJson(res, 200, { user: publicUser(manager) });
+    return sendJson(res, 200, { user: publicUser(executive) });
   }
 
   if (pathname === '/api/auth/logout' && req.method === 'POST') {
