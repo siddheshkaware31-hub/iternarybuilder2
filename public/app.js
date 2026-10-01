@@ -52,7 +52,7 @@ function layout(activeKey, innerHtml) {
   document.getElementById('logoutBtn').onclick = async () => {
     await api('/api/auth/logout', { method: 'POST' });
     STATE.user = null;
-    nav('#/dashboard');
+    nav('#/login');
   };
 }
 
@@ -595,27 +595,15 @@ async function renderReports() {
 
 // ---------- ROUTER ----------
 async function router() {
-  // If not yet logged in, silently auto-login as admin (no login page shown)
-  if (!STATE.user) {
-    try {
-      // Try existing session first
-      const { user } = await api('/api/auth/me');
-      STATE.user = user;
-    } catch (e) {
-      // No session — auto-login as admin
-      try {
-        const { user } = await api('/api/auth/autologin', { method: 'POST' });
-        STATE.user = user;
-      } catch (err) {
-        root.innerHTML = `<div style="padding:40px;text-align:center;color:#e53e3e">Failed to load application. Please refresh.</div>`;
-        return;
-      }
-    }
+  const hash = window.location.hash || '#/login';
+  if (!STATE.user && hash !== '#/login') {
+    try { const { user } = await api('/api/auth/me'); STATE.user = user; } catch (e) { nav('#/login'); return; }
   }
-
-  const hash = window.location.hash || '#/dashboard';
-  // Redirect away from login page if someone navigates there
-  if (hash === '#/login') { nav('#/dashboard'); return; }
+  if (hash === '#/login') {
+    if (STATE.user) { nav('#/dashboard'); return; }
+    return renderLogin();
+  }
+  if (!STATE.user) { nav('#/login'); return; }
 
   const dayMatch = hash.match(/^#\/day\/(\d+)$/);
   const empMatch = hash.match(/^#\/manager\/employee\/([\w-]+)$/);
@@ -639,3 +627,4 @@ async function router() {
 
 window.addEventListener('hashchange', router);
 window.addEventListener('DOMContentLoaded', router);
+
