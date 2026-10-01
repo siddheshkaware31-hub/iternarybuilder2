@@ -453,15 +453,12 @@ function serveStatic(req, res, pathname) {
 // Vercel serverless handler — export as default function
 module.exports = async (req, res) => {
   try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
+    const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
     const pathname = url.pathname;
-    if (pathname.startsWith('/api/')) {
-      await handleApi(req, res, pathname, url.searchParams);
-      return;
-    }
-    serveStatic(req, res, pathname);
+    await handleApi(req, res, pathname, url.searchParams);
   } catch (err) {
     console.error(err);
     sendJson(res, 500, { error: 'Internal server error' });
   }
 };
+
